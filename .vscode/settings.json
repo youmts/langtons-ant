@@ -1,0 +1,11 @@
+{
+  "cSpell.words": [
+    "endwin",
+    "getch",
+    "initscr",
+    "mvaddstr",
+    "mvprintw",
+    "pancurses",
+    "printw"
+  ]
+}
