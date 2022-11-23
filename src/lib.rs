@@ -12,8 +12,16 @@ impl Scene {
         Scene {
             ant: Ant {
                 position: Position {
-                    y: YPositionValue((FIELD_HEIGHT / 2).try_into().unwrap()),
-                    x: XPositionValue((FIELD_WIDTH / 2).try_into().unwrap()),
+                    y: YPositionValue(
+                        LoopValue::new(
+                            (FIELD_HEIGHT / 2).try_into().unwrap(),
+                            FIELD_HEIGHT as i32)
+                        ),
+                    x: XPositionValue(
+                        LoopValue::new(
+                            (FIELD_WIDTH / 2).try_into().unwrap(),
+                            FIELD_HEIGHT as i32)
+                        ),
                 },
                 direction: Direction::Down,
             },
@@ -32,7 +40,7 @@ impl Scene {
     }
 
     pub fn ant_position(&self) -> (i32, i32) {
-        (self.ant.position.x.0, self.ant.position.y.0)
+        (self.ant.position.x.0.value(), self.ant.position.y.0.value())
     }
 
     pub fn loop_count(&self) -> u32 {
@@ -47,7 +55,7 @@ pub struct Ant {
 
 impl Ant {
     fn work(&mut self, field: &mut Field) {
-        let cell = &field[self.position.y.0 as usize][self.position.x.0 as usize];
+        let cell = &field[self.position.y.0.value() as usize][self.position.x.0.value() as usize];
         match cell {
             Cell::White => {
                 self.direction = self.direction.rotate_cw();
@@ -57,7 +65,7 @@ impl Ant {
             }
         }
 
-        field[self.position.y.0 as usize][self.position.x.0 as usize] = cell.reverse();
+        field[self.position.y.0.value() as usize][self.position.x.0.value() as usize] = cell.reverse();
 
         self.position += self.direction.vector();
     }
@@ -68,49 +76,73 @@ pub type Field = Vec<Vec<Cell>>;
 use std::ops;
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct YPositionValue(i32);
-impl ops::AddAssign<YVectorValue> for YPositionValue {
-    fn add_assign(&mut self, rhs: YVectorValue) {
-        *self = Self((self.0 + rhs.0).rem_euclid(FIELD_HEIGHT as i32))
+pub struct LoopValue {
+   value: i32,
+   max_value: i32, 
+}
+
+impl LoopValue {
+    fn new(value: i32, max_value: i32) -> LoopValue
+    {
+        Self { value, max_value }
+    }
+    
+    fn value(&self) -> i32 {
+        self.value
+    }
+}
+
+impl ops::AddAssign<i32> for LoopValue {
+    fn add_assign(&mut self, rhs: i32) {
+        self.value = (self.value + rhs).rem_euclid(self.max_value);
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{YPositionValue, YVectorValue, FIELD_HEIGHT};
+    use crate::{LoopValue};
 
     #[test]
     fn add_assign_works() {
-        let mut value = YPositionValue(0);
-        value += YVectorValue(1);
-        assert_eq!(value, YPositionValue(1));
+        let mut x = LoopValue::new(0, 10);
+        x += 1;
+        assert_eq!(x.value(), 1);
     }
 
     #[test]
     fn add_assign_positive_overflow_works() {
-        let mut value = YPositionValue(FIELD_HEIGHT as i32 - 1);
-        value += YVectorValue(1);
-        assert_eq!(value, YPositionValue(0));
+        let mut x = LoopValue::new(9, 10);
+        x += 1;
+        assert_eq!(x.value(), 0);
     }
 
     #[test]
     fn add_assign_positive_negative_overflow_works() {
-        let mut value = YPositionValue(0);
-        value += YVectorValue(-1);
-        assert_eq!(value, YPositionValue(FIELD_HEIGHT as i32 - 1));
+        let mut x = LoopValue::new(0, 10);
+        x += -1;
+        assert_eq!(x.value(), 9);
     }
 }
+
+
+#[derive(Clone)]
+struct YPositionValue(LoopValue);
+impl ops::AddAssign<YVectorValue> for YPositionValue {
+    fn add_assign(&mut self, rhs: YVectorValue) {
+        self.0 += rhs.0;
+    }
+} 
+
+#[derive(Clone)]
+struct XPositionValue(LoopValue);
+impl ops::AddAssign<XVectorValue> for XPositionValue {
+    fn add_assign(&mut self, rhs: XVectorValue) {
+        self.0 += rhs.0;
+    }
+} 
 
 #[derive(Clone)]
 pub struct YVectorValue(i32);
-
-#[derive(Clone)]
-pub struct XPositionValue(i32);
-impl ops::AddAssign<XVectorValue> for XPositionValue {
-    fn add_assign(&mut self, rhs: XVectorValue) {
-        *self = Self((self.0 + rhs.0).rem_euclid(FIELD_WIDTH as i32))
-    }
-}
 
 #[derive(Clone)]
 pub struct XVectorValue(i32);

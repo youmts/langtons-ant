@@ -7,7 +7,7 @@ use sdl2::rect::{Point, Rect};
 use sdl2::render::Canvas;
 use sdl2::video::Window;
 
-pub const SKIP_RENDER_FRAME: u32 = 10;
+pub const SKIP_RENDER_FRAME: u32 = 100;
 pub const CANVAS_SCALE: u32 = 4;
 
 pub fn main() {
