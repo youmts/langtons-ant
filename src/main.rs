@@ -44,7 +44,10 @@ pub fn main() {
 
         if scene.loop_count() % SKIP_RENDER_FRAME == 0 {
             clear(&mut canvas);
-            render_scene(&mut canvas, scene.field());
+            render_field(&mut canvas, scene.field());
+
+            let (x, y) = scene.ant_position();
+            render_ant(&mut canvas, x, y);
             render_information(&mut canvas, &font, scene.loop_count());
             canvas.present();
         }
@@ -59,7 +62,6 @@ pub fn main() {
                 _ => {}
             }
         }
-        // The rest of the game loop goes here...
 
         // ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
@@ -72,14 +74,9 @@ fn render_information(canvas: &mut Canvas<Window>, font: &sdl2::ttf::Font, loop_
     let texture_creator = canvas.texture_creator();
     let texture = surface.as_texture(&texture_creator).unwrap();
     let scale = 2;
-    
+
     let rect = Rect::new(0, 0, surface.width() / scale, surface.height() / scale);
     canvas.copy(&texture, None, rect).unwrap();
-
-    // canvas.with_texture_canvas(&mut texture, |canvas| {
-    //     let rect = Rect::new(0, 0, 100, 20);
-    //     canvas.draw_rect(rect).unwrap();
-    // }).unwrap();
 }
 
 fn clear(canvas: &mut Canvas<Window>) {
@@ -87,7 +84,7 @@ fn clear(canvas: &mut Canvas<Window>) {
     canvas.clear();
 }
 
-fn render_scene(canvas: &mut Canvas<Window>, field: &Field) {
+fn render_field(canvas: &mut Canvas<Window>, field: &Field) {
     let mut points = vec![];
 
     // TODO: draw only diffs
@@ -104,3 +101,14 @@ fn render_scene(canvas: &mut Canvas<Window>, field: &Field) {
     canvas.draw_points(&points[..]).unwrap();
 }
 
+fn render_ant(canvas: &mut Canvas<Window>, x: i32, y: i32) {
+    let thickness: i32 = 2;
+    let rect = Rect::new(
+        x - thickness,
+        y - thickness,
+        thickness as u32 * 2,
+        thickness as u32 * 2,
+    );
+    canvas.set_draw_color(Color::RGB(255, 0, 0));
+    canvas.fill_rect(rect).unwrap();
+}

@@ -1,5 +1,5 @@
 pub const FIELD_WIDTH: usize = 150;
-pub const FIELD_HEIGHT: usize = 100;
+pub const FIELD_HEIGHT: usize = 150;
 
 pub struct Scene {
     ant: Ant,
@@ -29,6 +29,10 @@ impl Scene {
 
     pub fn field(&self) -> &Field {
         &self.field
+    }
+
+    pub fn ant_position(&self) -> (i32, i32) {
+        (self.ant.position.x.0, self.ant.position.y.0)
     }
 
     pub fn loop_count(&self) -> u32 {
