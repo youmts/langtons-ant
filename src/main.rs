@@ -7,6 +7,9 @@ use sdl2::rect::Point;
 use sdl2::render::Canvas;
 use sdl2::video::Window;
 
+pub const SKIP_RENDER_FRAME: u32 = 1;
+pub const CANVAS_SCALE: u32 = 4;
+
 pub fn main() {
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
@@ -14,12 +17,11 @@ pub fn main() {
     // let ttl_context = sdl2::ttf::init().unwrap();
     // let font = ttl_context.load_font("Sans.ttf", 24).unwrap();
 
-    let scale = 2;
     let window = video_subsystem
         .window(
             "rust-sdl2 demo",
-            FIELD_WIDTH as u32 * scale,
-            FIELD_HEIGHT as u32 * scale,
+            FIELD_WIDTH as u32 * CANVAS_SCALE,
+            FIELD_HEIGHT as u32 * CANVAS_SCALE,
         )
         .position_centered()
         .build()
@@ -40,7 +42,7 @@ pub fn main() {
     'running: loop {
         scene.work();
 
-        if scene.loop_count() % 100 == 0 {
+        if scene.loop_count() % SKIP_RENDER_FRAME == 0 {
             render(&mut canvas, scene.field());
             canvas.present();
         }
