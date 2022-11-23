@@ -1,9 +1,10 @@
-pub const FIELD_WIDTH: usize = 60;
-pub const FIELD_HEIGHT: usize = 60;
+pub const FIELD_WIDTH: usize = 600;
+pub const FIELD_HEIGHT: usize = 600;
 
 pub struct Scene {
     ant: Ant,
     field: Field,
+    loop_count: u32,
 }
 
 impl Scene {
@@ -16,16 +17,22 @@ impl Scene {
                 },
                 direction: Direction::Down,
             },
-            field: vec![vec![Cell::White; FIELD_WIDTH]; FIELD_HEIGHT],
+            field: vec![vec![Cell::Black; FIELD_WIDTH]; FIELD_HEIGHT],
+            loop_count: 0,
         }
     }
 
     pub fn work(&mut self) {
-        self.ant.work(&mut self.field)
+        self.ant.work(&mut self.field);
+        self.loop_count += 1;
     }
 
     pub fn field(&self) -> &Field {
         &self.field
+    }
+
+    pub fn loop_count(&self) -> u32 {
+        self.loop_count
     }
 }
 

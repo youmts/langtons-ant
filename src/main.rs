@@ -1,41 +1,77 @@
 use std::{thread::sleep, time::Duration};
 
 use langtons_ant::*;
-use pancurses::*;
 
-fn main() {
-    let mut window = initscr();
-    curs_set(0);
-    window.resize(FIELD_HEIGHT as i32, FIELD_WIDTH as i32 * 2);
+use sdl2::event::Event;
+use sdl2::keyboard::Keycode;
+use sdl2::pixels::Color;
+use sdl2::rect::Point;
+use sdl2::render::Canvas;
+use sdl2::video::Window;
+
+pub fn main() {
+    let sdl_context = sdl2::init().unwrap();
+    let video_subsystem = sdl_context.video().unwrap();
+
+    // let ttl_context = sdl2::ttf::init().unwrap();
+    // let font = ttl_context.load_font("Sans.ttf", 24).unwrap();
+
+    let window = video_subsystem
+        .window("rust-sdl2 demo", FIELD_WIDTH as u32, FIELD_HEIGHT as u32)
+        .position_centered()
+        .build()
+        .unwrap();
+
+    let mut canvas = window.into_canvas().build().unwrap();
+
+    canvas.set_draw_color(Color::RGB(0, 0, 0));
+    canvas.clear();
+    canvas.present();
+    let mut event_pump = sdl_context.event_pump().unwrap();
 
     let mut scene = Scene::init();
 
-    for count in 0..20000 {
+    'running: loop {
         scene.work();
 
-        if count % 10 == 0 {
-            render(&window, scene.field());
-            window.mvaddstr(0, 0, format!("{}", count));
+        if scene.loop_count() % 100 == 0 {
+            render(&mut canvas, scene.field());
+            canvas.present();
         }
+        // render_information(&mut canvas, &font, scene.loop_count());
 
-        window.refresh();
-        // sleep(Duration::from_millis(10));
+        for event in event_pump.poll_iter() {
+            match event {
+                Event::Quit { .. }
+                | Event::KeyDown {
+                    keycode: Some(Keycode::Escape),
+                    ..
+                } => break 'running,
+                _ => {}
+            }
+        }
+        // The rest of the game loop goes here...
+
+        // ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
-
-    window.getch();
-    endwin();
 }
 
-fn render(window: &Window, field: &Field) {
-    window.clear();
+fn render(canvas: &mut Canvas<Window>, field: &Field) {
+    canvas.set_draw_color(Color::RGB(0, 0, 0));
+    canvas.clear();
 
+    let mut points = vec![];
+
+    // TODO: draw only diffs
     for (y, row) in field.iter().enumerate() {
         for (x, cell) in row.iter().enumerate() {
-            let x = x * 2;
             match cell {
-                Cell::Black => 0,
-                Cell::White => window.mvaddstr(y as i32, x as i32, "■"),
+                Cell::Black => (),
+                Cell::White => points.push(Point::new(x as i32, y as i32)),
             };
         }
     }
+
+    canvas.set_draw_color(Color::RGB(255, 255, 255));
+    canvas.draw_points(&points[..]);
 }
