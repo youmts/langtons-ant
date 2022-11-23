@@ -12,16 +12,14 @@ impl Scene {
         Scene {
             ant: Ant {
                 position: Position {
-                    y: YPositionValue(
-                        LoopValue::new(
-                            (FIELD_HEIGHT / 2).try_into().unwrap(),
-                            FIELD_HEIGHT as i32)
-                        ),
-                    x: XPositionValue(
-                        LoopValue::new(
-                            (FIELD_WIDTH / 2).try_into().unwrap(),
-                            FIELD_HEIGHT as i32)
-                        ),
+                    y: YPositionValue(LoopValue::new(
+                        (FIELD_HEIGHT / 2).try_into().unwrap(),
+                        FIELD_HEIGHT as i32,
+                    )),
+                    x: XPositionValue(LoopValue::new(
+                        (FIELD_WIDTH / 2).try_into().unwrap(),
+                        FIELD_HEIGHT as i32,
+                    )),
                 },
                 direction: Direction::Down,
             },
@@ -40,7 +38,7 @@ impl Scene {
     }
 
     pub fn ant_position(&self) -> (i32, i32) {
-        (self.ant.position.x.0.value(), self.ant.position.y.0.value())
+        self.ant.position.value()
     }
 
     pub fn loop_count(&self) -> u32 {
@@ -55,7 +53,7 @@ pub struct Ant {
 
 impl Ant {
     fn work(&mut self, field: &mut Field) {
-        let cell = &field[self.position.y.0.value() as usize][self.position.x.0.value() as usize];
+        let cell = &field[self.position.y_usize()][self.position.x_usize()];
         match cell {
             Cell::White => {
                 self.direction = self.direction.rotate_cw();
@@ -65,7 +63,7 @@ impl Ant {
             }
         }
 
-        field[self.position.y.0.value() as usize][self.position.x.0.value() as usize] = cell.reverse();
+        field[self.position.y_usize()][self.position.x_usize()] = cell.reverse();
 
         self.position += self.direction.vector();
     }
@@ -77,16 +75,15 @@ use std::ops;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct LoopValue {
-   value: i32,
-   max_value: i32, 
+    value: i32,
+    max_value: i32,
 }
 
 impl LoopValue {
-    fn new(value: i32, max_value: i32) -> LoopValue
-    {
+    fn new(value: i32, max_value: i32) -> LoopValue {
         Self { value, max_value }
     }
-    
+
     fn value(&self) -> i32 {
         self.value
     }
@@ -98,9 +95,21 @@ impl ops::AddAssign<i32> for LoopValue {
     }
 }
 
+impl Into<i32> for LoopValue {
+    fn into(self) -> i32 {
+        self.value
+    }
+}
+
+impl Into<usize> for LoopValue {
+    fn into(self) -> usize {
+        self.value as usize
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::{LoopValue};
+    use crate::LoopValue;
 
     #[test]
     fn add_assign_works() {
@@ -124,22 +133,41 @@ mod tests {
     }
 }
 
-
 #[derive(Clone)]
 struct YPositionValue(LoopValue);
+impl YPositionValue {
+    fn value(&self) -> i32 {
+        self.0.value()
+    }
+}
 impl ops::AddAssign<YVectorValue> for YPositionValue {
     fn add_assign(&mut self, rhs: YVectorValue) {
         self.0 += rhs.0;
     }
-} 
+}
+impl Into<i32> for YPositionValue {
+    fn into(self) -> i32 {
+        self.0.into()
+    }
+}
 
 #[derive(Clone)]
 struct XPositionValue(LoopValue);
+impl XPositionValue {
+    fn value(&self) -> i32 {
+        self.0.value()
+    }
+}
 impl ops::AddAssign<XVectorValue> for XPositionValue {
     fn add_assign(&mut self, rhs: XVectorValue) {
         self.0 += rhs.0;
     }
-} 
+}
+impl Into<i32> for XPositionValue {
+    fn into(self) -> i32 {
+        self.0.into()
+    }
+}
 
 #[derive(Clone)]
 pub struct YVectorValue(i32);
@@ -151,6 +179,17 @@ pub struct XVectorValue(i32);
 pub struct Position {
     y: YPositionValue,
     x: XPositionValue,
+}
+impl Position {
+    fn y_usize(&self) -> usize {
+        self.y.value() as usize
+    }
+    fn x_usize(&self) -> usize {
+        self.x.value() as usize
+    }
+    fn value(&self) -> (i32, i32) {
+        (self.x.value(), self.y.value())
+    }
 }
 impl ops::AddAssign<Vector> for Position {
     fn add_assign(&mut self, rhs: Vector) {
