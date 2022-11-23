@@ -1,5 +1,5 @@
-pub const FIELD_WIDTH: usize = 600;
-pub const FIELD_HEIGHT: usize = 600;
+pub const FIELD_WIDTH: usize = 300;
+pub const FIELD_HEIGHT: usize = 200;
 
 pub struct Scene {
     ant: Ant,

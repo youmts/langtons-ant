@@ -14,8 +14,13 @@ pub fn main() {
     // let ttl_context = sdl2::ttf::init().unwrap();
     // let font = ttl_context.load_font("Sans.ttf", 24).unwrap();
 
+    let scale = 2;
     let window = video_subsystem
-        .window("rust-sdl2 demo", FIELD_WIDTH as u32, FIELD_HEIGHT as u32)
+        .window(
+            "rust-sdl2 demo",
+            FIELD_WIDTH as u32 * scale,
+            FIELD_HEIGHT as u32 * scale,
+        )
         .position_centered()
         .build()
         .unwrap();
@@ -23,6 +28,9 @@ pub fn main() {
     let mut canvas = window.into_canvas().build().unwrap();
 
     canvas.set_draw_color(Color::RGB(0, 0, 0));
+    canvas
+        .set_logical_size(FIELD_WIDTH as u32, FIELD_HEIGHT as u32)
+        .unwrap();
     canvas.clear();
     canvas.present();
     let mut event_pump = sdl_context.event_pump().unwrap();
