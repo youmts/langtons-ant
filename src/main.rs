@@ -1,5 +1,3 @@
-use std::{thread::sleep, time::Duration};
-
 use langtons_ant::*;
 
 use sdl2::event::Event;
@@ -73,5 +71,5 @@ fn render(canvas: &mut Canvas<Window>, field: &Field) {
     }
 
     canvas.set_draw_color(Color::RGB(255, 255, 255));
-    canvas.draw_points(&points[..]);
+    canvas.draw_points(&points[..]).unwrap();
 }
