@@ -7,6 +7,9 @@ use sdl2::rect::{Point, Rect};
 use sdl2::render::Canvas;
 use sdl2::video::Window;
 
+pub const FIELD_WIDTH: u32 = 150;
+pub const FIELD_HEIGHT: u32 = 150;
+
 pub const SKIP_RENDER_FRAME: u32 = 100;
 pub const CANVAS_SCALE: u32 = 4;
 
@@ -37,7 +40,7 @@ pub fn main() {
     canvas.present();
     let mut event_pump = sdl_context.event_pump().unwrap();
 
-    let mut scene = Scene::init();
+    let mut scene = Scene::init(FIELD_WIDTH, FIELD_HEIGHT);
 
     'running: loop {
         scene.work();

@@ -1,6 +1,3 @@
-pub const FIELD_WIDTH: usize = 150;
-pub const FIELD_HEIGHT: usize = 150;
-
 pub struct Scene {
     ant: Ant,
     field: Field,
@@ -8,22 +5,22 @@ pub struct Scene {
 }
 
 impl Scene {
-    pub fn init() -> Scene {
+    pub fn init(x: u32, y: u32) -> Scene {
         Scene {
             ant: Ant {
                 position: Position {
                     y: YPositionValue(LoopValue::new(
-                        (FIELD_HEIGHT / 2).try_into().unwrap(),
-                        FIELD_HEIGHT as i32,
+                        (y / 2).try_into().unwrap(),
+                        y as i32,
                     )),
                     x: XPositionValue(LoopValue::new(
-                        (FIELD_WIDTH / 2).try_into().unwrap(),
-                        FIELD_HEIGHT as i32,
+                        (x / 2).try_into().unwrap(),
+                        y as i32,
                     )),
                 },
                 direction: Direction::Down,
             },
-            field: vec![vec![Cell::Black; FIELD_WIDTH]; FIELD_HEIGHT],
+            field: vec![vec![Cell::Black; x as usize]; y as usize],
             loop_count: 0,
         }
     }
