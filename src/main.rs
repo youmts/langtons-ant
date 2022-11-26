@@ -51,8 +51,7 @@ pub fn main() {
             clear(&mut canvas);
             render_field(&mut canvas, scene.field(), scene.indexed_conditions());
 
-            let (x, y) = scene.ant_position();
-            render_ant(&mut canvas, x, y);
+            render_ants(&mut canvas, scene.ants());
             render_information(&mut canvas, &font, scene.loop_count());
             canvas.present();
         }
@@ -112,7 +111,24 @@ fn convert_color(color: &langtons_ant::Color) -> Color {
     Color::RGB(color.r, color.g, color.b)
 }
 
-fn render_ant(canvas: &mut Canvas<Window>, x: i32, y: i32) {
+fn render_ants(canvas: &mut Canvas<Window>, ants: &[Ant]) {
+    for (i, ant) in ants.iter().enumerate() {
+        let (x, y) = ant.position();
+        let color = find_ants_color(i as u8);
+        render_ant(canvas, x, y, color);
+    }
+}
+
+fn find_ants_color(number: u8) -> Color {
+    match number {
+        0 => Color::RGB(255, 0, 0),
+        1 => Color::RGB(0, 255, 0),
+        2 => Color::RGB(0, 0, 255),
+        _default => panic!(),
+    }
+}
+
+fn render_ant(canvas: &mut Canvas<Window>, x: i32, y: i32, color: Color) {
     let thickness: i32 = 2;
     let rect = Rect::new(
         x - thickness,
@@ -120,16 +136,6 @@ fn render_ant(canvas: &mut Canvas<Window>, x: i32, y: i32) {
         thickness as u32 * 2,
         thickness as u32 * 2,
     );
-    canvas.set_draw_color(Color::RGB(0, 0, 0));
-    canvas.fill_rect(rect).unwrap();
-
-    let thickness: i32 = 1;
-    let rect = Rect::new(
-        x - thickness,
-        y - thickness,
-        thickness as u32 * 2,
-        thickness as u32 * 2,
-    );
-    canvas.set_draw_color(Color::RGB(255, 255, 255));
+    canvas.set_draw_color(color);
     canvas.fill_rect(rect).unwrap();
 }

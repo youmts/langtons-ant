@@ -38,7 +38,7 @@ pub struct Behavior {
 
 pub struct Scene {
     behavior: Behavior,
-    ant: Ant,
+    ants: Vec<Ant>,
     field: Field,
     loop_count: u32,
 }
@@ -100,24 +100,51 @@ fn find_behavior(number: u8) -> Behavior {
     }
 }
 
+fn find_ants(number: u8, x: u32, y: u32) -> Vec<Ant> {
+    let x = x as i32;
+    let y = y as i32;
+    match number {
+        1 => vec![Ant {
+            position: Position {
+                y: YPositionValue(LoopValue::new(y / 2, y)),
+                x: XPositionValue(LoopValue::new(x / 2, y)),
+            },
+            direction: Direction::Down,
+        }],
+        2 => vec![
+            Ant {
+                position: Position {
+                    y: YPositionValue(LoopValue::new(y / 2, y)),
+                    x: XPositionValue(LoopValue::new(x / 3, y)),
+                },
+                direction: Direction::Down,
+            },
+            Ant {
+                position: Position {
+                    y: YPositionValue(LoopValue::new(y / 2, y)),
+                    x: XPositionValue(LoopValue::new(x / 3 * 2, y)),
+                },
+                direction: Direction::Down,
+            },
+        ],
+        _default => panic!(),
+    }
+}
+
 impl Scene {
     pub fn init(x: u32, y: u32) -> Scene {
         Scene {
             behavior: find_behavior(0),
-            ant: Ant {
-                position: Position {
-                    y: YPositionValue(LoopValue::new((y / 2).try_into().unwrap(), y as i32)),
-                    x: XPositionValue(LoopValue::new((x / 2).try_into().unwrap(), y as i32)),
-                },
-                direction: Direction::Down,
-            },
+            ants: find_ants(2, x, y),
             field: vec![vec![0; x as usize]; y as usize],
             loop_count: 0,
         }
     }
 
     pub fn work(&mut self) {
-        self.ant.work(&mut self.field, &self.behavior);
+        for ant in &mut self.ants {
+            ant.work(&mut self.field, &self.behavior);
+        }
         self.loop_count += 1;
     }
 
@@ -129,8 +156,8 @@ impl Scene {
         &self.behavior.indexed_conditions
     }
 
-    pub fn ant_position(&self) -> (i32, i32) {
-        self.ant.position.value()
+    pub fn ants(&self) -> &Vec<Ant> {
+        &self.ants
     }
 
     pub fn loop_count(&self) -> u32 {
@@ -160,6 +187,10 @@ impl Ant {
             (cell + 1) % behavior.indexed_conditions.len();
 
         self.position += self.direction.vector();
+    }
+
+    pub fn position(&self) -> (i32, i32) {
+        (self.position.x.value(), self.position.y.value())
     }
 }
 
@@ -280,9 +311,6 @@ impl Position {
     }
     fn x_usize(&self) -> usize {
         self.x.value() as usize
-    }
-    fn value(&self) -> (i32, i32) {
-        (self.x.value(), self.y.value())
     }
 }
 impl ops::AddAssign<Vector> for Position {
