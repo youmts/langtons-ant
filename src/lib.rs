@@ -11,7 +11,7 @@ pub struct Color {
 
 impl Color {
     fn new(r: u8, g: u8, b: u8) -> Color {
-        Color {r, g, b}
+        Color { r, g, b }
     }
 }
 
@@ -33,7 +33,7 @@ impl State {
 }
 
 pub struct Behavior {
-    indexed_conditions: Vec<State>
+    indexed_conditions: Vec<State>,
 }
 
 pub struct Scene {
@@ -43,24 +43,71 @@ pub struct Scene {
     loop_count: u32,
 }
 
+fn find_behavior(number: u8) -> Behavior {
+    match number {
+        0 => Behavior {
+            indexed_conditions: vec![
+                State::new(Pattern::Right, Color::new(0, 0, 0)),
+                State::new(Pattern::Left, Color::new(255, 255, 255)),
+            ],
+        },
+        1 => Behavior {
+            indexed_conditions: vec![
+                State::new(Pattern::Left, Color::new(0, 0, 0)),
+                State::new(Pattern::Right, Color::new(255, 0, 0)),
+                State::new(Pattern::Right, Color::new(0, 255, 0)),
+                State::new(Pattern::Right, Color::new(0, 0, 255)),
+                State::new(Pattern::Right, Color::new(255, 255, 0)),
+                State::new(Pattern::Right, Color::new(255, 0, 255)),
+                State::new(Pattern::Left, Color::new(0, 255, 255)),
+                State::new(Pattern::Left, Color::new(255, 255, 255)),
+                State::new(Pattern::Right, Color::new(128, 128, 128)),
+            ],
+        },
+        2 => Behavior {
+            indexed_conditions: vec![
+                State::new(Pattern::Left, Color::new(0, 0, 0)),
+                State::new(Pattern::Left, Color::new(255, 0, 0)),
+                State::new(Pattern::Right, Color::new(0, 255, 0)),
+                State::new(Pattern::Right, Color::new(0, 0, 255)),
+                State::new(Pattern::Right, Color::new(255, 255, 0)),
+                State::new(Pattern::Left, Color::new(255, 0, 255)),
+                State::new(Pattern::Right, Color::new(0, 255, 255)),
+                State::new(Pattern::Left, Color::new(255, 255, 255)),
+                State::new(Pattern::Right, Color::new(128, 128, 128)),
+                State::new(Pattern::Left, Color::new(128, 0, 0)),
+                State::new(Pattern::Left, Color::new(0, 128, 0)),
+                State::new(Pattern::Right, Color::new(0, 0, 128)),
+            ],
+        },
+        3 => Behavior {
+            indexed_conditions: vec![
+                State::new(Pattern::Right, Color::new(0, 0, 0)),
+                State::new(Pattern::Right, Color::new(255, 0, 0)),
+                State::new(Pattern::Left, Color::new(0, 255, 0)),
+                State::new(Pattern::Left, Color::new(0, 0, 255)),
+                State::new(Pattern::Left, Color::new(255, 255, 0)),
+                State::new(Pattern::Right, Color::new(255, 0, 255)),
+                State::new(Pattern::Left, Color::new(0, 255, 255)),
+                State::new(Pattern::Left, Color::new(255, 255, 255)),
+                State::new(Pattern::Left, Color::new(128, 128, 128)),
+                State::new(Pattern::Right, Color::new(128, 0, 0)),
+                State::new(Pattern::Right, Color::new(0, 128, 0)),
+                State::new(Pattern::Right, Color::new(0, 0, 128)),
+            ],
+        },
+        _default => panic!(),
+    }
+}
+
 impl Scene {
     pub fn init(x: u32, y: u32) -> Scene {
-        let behavior = Behavior { indexed_conditions: vec![
-            State::new(Pattern::Right, Color::new(0, 0, 0)),
-            State::new(Pattern::Left, Color::new(255, 255, 255)),
-        ] };
         Scene {
-            behavior,
+            behavior: find_behavior(0),
             ant: Ant {
                 position: Position {
-                    y: YPositionValue(LoopValue::new(
-                        (y / 2).try_into().unwrap(),
-                        y as i32,
-                    )),
-                    x: XPositionValue(LoopValue::new(
-                        (x / 2).try_into().unwrap(),
-                        y as i32,
-                    )),
+                    y: YPositionValue(LoopValue::new((y / 2).try_into().unwrap(), y as i32)),
+                    x: XPositionValue(LoopValue::new((x / 2).try_into().unwrap(), y as i32)),
                 },
                 direction: Direction::Down,
             },
@@ -77,7 +124,7 @@ impl Scene {
     pub fn field(&self) -> &Field {
         &self.field
     }
-    
+
     pub fn indexed_conditions(&self) -> &Vec<State> {
         &self.behavior.indexed_conditions
     }
@@ -109,7 +156,8 @@ impl Ant {
             }
         }
 
-        field[self.position.y_usize()][self.position.x_usize()] = (cell + 1) % behavior.indexed_conditions.len();
+        field[self.position.y_usize()][self.position.x_usize()] =
+            (cell + 1) % behavior.indexed_conditions.len();
 
         self.position += self.direction.vector();
     }
