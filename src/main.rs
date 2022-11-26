@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use langtons_ant::*;
 
 use sdl2::event::Event;
@@ -47,7 +49,7 @@ pub fn main() {
 
         if scene.loop_count() % SKIP_RENDER_FRAME == 0 {
             clear(&mut canvas);
-            render_field(&mut canvas, scene.field());
+            render_field(&mut canvas, scene.field(), scene.indexed_conditions());
 
             let (x, y) = scene.ant_position();
             render_ant(&mut canvas, x, y);
@@ -87,21 +89,27 @@ fn clear(canvas: &mut Canvas<Window>) {
     canvas.clear();
 }
 
-fn render_field(canvas: &mut Canvas<Window>, field: &Field) {
-    let mut points = vec![];
+fn render_field(canvas: &mut Canvas<Window>, field: &Field, indexed_states: &Vec<State>) {
+    let mut map: HashMap<usize, Vec<Point>> = HashMap::new();
 
-    // TODO: draw only diffs
     for (y, row) in field.iter().enumerate() {
         for (x, cell) in row.iter().enumerate() {
-            match cell {
-                Cell::Black => (),
-                Cell::White => points.push(Point::new(x as i32, y as i32)),
-            };
+            map.entry(*cell)
+                .or_insert_with(|| vec![])
+                .push(Point::new(x as i32, y as i32));
         }
     }
 
-    canvas.set_draw_color(Color::RGB(255, 255, 255));
-    canvas.draw_points(&points[..]).unwrap();
+    for (state_index, points) in map {
+        let state = &indexed_states[state_index];
+        let color = convert_color(state.color());
+        canvas.set_draw_color(color);
+        canvas.draw_points(&points[..]).unwrap();
+    }
+}
+
+fn convert_color(color: &langtons_ant::Color) -> Color {
+    Color::RGB(color.r, color.g, color.b)
 }
 
 fn render_ant(canvas: &mut Canvas<Window>, x: i32, y: i32) {

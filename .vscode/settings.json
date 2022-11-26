@@ -7,5 +7,6 @@
     "mvprintw",
     "pancurses",
     "printw"
-  ]
+  ],
+  "rust-analyzer.checkOnSave.enable": true,
 }

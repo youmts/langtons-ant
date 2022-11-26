@@ -1,4 +1,43 @@
+enum Pattern {
+    Right,
+    Left,
+}
+
+pub struct Color {
+    pub r: u8,
+    pub g: u8,
+    pub b: u8,
+}
+
+impl Color {
+    fn new(r: u8, g: u8, b: u8) -> Color {
+        Color {r, g, b}
+    }
+}
+
+pub struct State {
+    pattern: Pattern,
+    color: Color,
+}
+
+impl State {
+    pub fn color(&self) -> &Color {
+        &self.color
+    }
+}
+
+impl State {
+    fn new(pattern: Pattern, color: Color) -> State {
+        State { pattern, color }
+    }
+}
+
+pub struct Behavior {
+    indexed_conditions: Vec<State>
+}
+
 pub struct Scene {
+    behavior: Behavior,
     ant: Ant,
     field: Field,
     loop_count: u32,
@@ -6,7 +45,12 @@ pub struct Scene {
 
 impl Scene {
     pub fn init(x: u32, y: u32) -> Scene {
+        let behavior = Behavior { indexed_conditions: vec![
+            State::new(Pattern::Right, Color::new(0, 0, 0)),
+            State::new(Pattern::Left, Color::new(255, 255, 255)),
+        ] };
         Scene {
+            behavior,
             ant: Ant {
                 position: Position {
                     y: YPositionValue(LoopValue::new(
@@ -20,18 +64,22 @@ impl Scene {
                 },
                 direction: Direction::Down,
             },
-            field: vec![vec![Cell::Black; x as usize]; y as usize],
+            field: vec![vec![0; x as usize]; y as usize],
             loop_count: 0,
         }
     }
 
     pub fn work(&mut self) {
-        self.ant.work(&mut self.field);
+        self.ant.work(&mut self.field, &self.behavior);
         self.loop_count += 1;
     }
 
     pub fn field(&self) -> &Field {
         &self.field
+    }
+    
+    pub fn indexed_conditions(&self) -> &Vec<State> {
+        &self.behavior.indexed_conditions
     }
 
     pub fn ant_position(&self) -> (i32, i32) {
@@ -49,24 +97,25 @@ pub struct Ant {
 }
 
 impl Ant {
-    fn work(&mut self, field: &mut Field) {
+    fn work(&mut self, field: &mut Field, behavior: &Behavior) {
         let cell = &field[self.position.y_usize()][self.position.x_usize()];
-        match cell {
-            Cell::White => {
+        let condition = &behavior.indexed_conditions[*cell];
+        match condition.pattern {
+            Pattern::Right => {
                 self.direction = self.direction.rotate_cw();
             }
-            Cell::Black => {
+            Pattern::Left => {
                 self.direction = self.direction.rotate_ccw();
             }
         }
 
-        field[self.position.y_usize()][self.position.x_usize()] = cell.reverse();
+        field[self.position.y_usize()][self.position.x_usize()] = (cell + 1) % behavior.indexed_conditions.len();
 
         self.position += self.direction.vector();
     }
 }
 
-pub type Field = Vec<Vec<Cell>>;
+pub type Field = Vec<Vec<usize>>;
 
 use std::ops;
 
@@ -246,21 +295,6 @@ impl Direction {
                 y: YVectorValue(0),
                 x: XVectorValue(-1),
             },
-        }
-    }
-}
-
-#[derive(Clone, Debug)]
-pub enum Cell {
-    White,
-    Black,
-}
-
-impl Cell {
-    fn reverse(&self) -> Cell {
-        match self {
-            Cell::White => Cell::Black,
-            Cell::Black => Cell::White,
         }
     }
 }
