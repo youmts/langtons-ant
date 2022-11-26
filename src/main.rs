@@ -9,8 +9,8 @@ use sdl2::rect::{Point, Rect};
 use sdl2::render::Canvas;
 use sdl2::video::Window;
 
-pub const FIELD_WIDTH: u32 = 150;
-pub const FIELD_HEIGHT: u32 = 150;
+pub const FIELD_WIDTH: u32 = 300;
+pub const FIELD_HEIGHT: u32 = 300;
 
 pub const SKIP_RENDER_FRAME: u32 = 100;
 pub const CANVAS_SCALE: u32 = 4;
@@ -120,6 +120,16 @@ fn render_ant(canvas: &mut Canvas<Window>, x: i32, y: i32) {
         thickness as u32 * 2,
         thickness as u32 * 2,
     );
-    canvas.set_draw_color(Color::RGB(255, 0, 0));
+    canvas.set_draw_color(Color::RGB(0, 0, 0));
+    canvas.fill_rect(rect).unwrap();
+
+    let thickness: i32 = 1;
+    let rect = Rect::new(
+        x - thickness,
+        y - thickness,
+        thickness as u32 * 2,
+        thickness as u32 * 2,
+    );
+    canvas.set_draw_color(Color::RGB(255, 255, 255));
     canvas.fill_rect(rect).unwrap();
 }
