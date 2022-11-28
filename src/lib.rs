@@ -127,6 +127,29 @@ fn find_ants(number: u8, x: u32, y: u32) -> Vec<Ant> {
                 direction: Direction::Down,
             },
         ],
+        3 => vec![
+            Ant {
+                position: Position {
+                    y: YPositionValue(LoopValue::new(y / 2, y)),
+                    x: XPositionValue(LoopValue::new(x / 4, y)),
+                },
+                direction: Direction::Down,
+            },
+            Ant {
+                position: Position {
+                    y: YPositionValue(LoopValue::new(y / 2, y)),
+                    x: XPositionValue(LoopValue::new(x / 2, y)),
+                },
+                direction: Direction::Down,
+            },
+            Ant {
+                position: Position {
+                    y: YPositionValue(LoopValue::new(y / 2, y)),
+                    x: XPositionValue(LoopValue::new(x / 4 * 3, y)),
+                },
+                direction: Direction::Down,
+            },
+        ],
         _default => panic!(),
     }
 }
@@ -135,7 +158,7 @@ impl Scene {
     pub fn init(x: u32, y: u32) -> Scene {
         Scene {
             behavior: find_behavior(0),
-            ants: find_ants(2, x, y),
+            ants: find_ants(3, x, y),
             field: vec![vec![0; x as usize]; y as usize],
             loop_count: 0,
         }
