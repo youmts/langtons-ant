@@ -9,11 +9,15 @@ use sdl2::rect::{Point, Rect};
 use sdl2::render::Canvas;
 use sdl2::video::Window;
 
-pub const FIELD_WIDTH: u32 = 300;
-pub const FIELD_HEIGHT: u32 = 300;
+pub const FIELD_WIDTH: u32 = 200;
+pub const FIELD_HEIGHT: u32 = 200;
 
-pub const SKIP_RENDER_FRAME: u32 = 100;
+pub const BEHAVIOR_NUMBER: u8 = 0;
+pub const ANTS_COUNT: u8 = 1;
+
+pub const SKIP_RENDER_FRAME: u32 = 10;
 pub const CANVAS_SCALE: u32 = 4;
+pub const ANTS_THICKNESS: u32 = 2;
 
 pub fn main() {
     let sdl_context = sdl2::init().unwrap();
@@ -42,7 +46,7 @@ pub fn main() {
     canvas.present();
     let mut event_pump = sdl_context.event_pump().unwrap();
 
-    let mut scene = Scene::init(FIELD_WIDTH, FIELD_HEIGHT);
+    let mut scene = Scene::init(FIELD_WIDTH, FIELD_HEIGHT, BEHAVIOR_NUMBER, ANTS_COUNT);
 
     'running: loop {
         scene.work();
@@ -129,7 +133,7 @@ fn find_ants_color(number: u8) -> Color {
 }
 
 fn render_ant(canvas: &mut Canvas<Window>, x: i32, y: i32, color: Color) {
-    let thickness: i32 = 2;
+    let thickness: i32 = 1;
     let rect = Rect::new(
         x - thickness,
         y - thickness,

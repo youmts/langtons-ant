@@ -155,10 +155,10 @@ fn find_ants(number: u8, x: u32, y: u32) -> Vec<Ant> {
 }
 
 impl Scene {
-    pub fn init(x: u32, y: u32) -> Scene {
+    pub fn init(x: u32, y: u32, behavior_number: u8, ants_count: u8) -> Scene {
         Scene {
-            behavior: find_behavior(0),
-            ants: find_ants(3, x, y),
+            behavior: find_behavior(behavior_number),
+            ants: find_ants(ants_count, x, y),
             field: vec![vec![0; x as usize]; y as usize],
             loop_count: 0,
         }
