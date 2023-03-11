@@ -141,6 +141,7 @@ fn clear(canvas: &mut Canvas<Window>) {
     canvas.clear();
 }
 
+// TODO: remove unwrap
 fn render_field(canvas: &mut Canvas<Window>, field: &Field, indexed_states: &[State]) {
     let mut map: HashMap<usize, Vec<Point>> = HashMap::new();
 
@@ -172,6 +173,7 @@ fn render_ants(canvas: &mut Canvas<Window>, ants: &[Ant]) {
     }
 }
 
+// TODO: remove panic
 fn find_ants_color(number: u8) -> Color {
     match number {
         0 => Color::RGB(255, 0, 0),
@@ -181,6 +183,7 @@ fn find_ants_color(number: u8) -> Color {
     }
 }
 
+// TODO: remove unwrap
 fn render_ant(canvas: &mut Canvas<Window>, x: i32, y: i32, color: Color) {
     let thickness: i32 = 1;
     let rect = Rect::new(
