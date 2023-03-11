@@ -10,7 +10,8 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
 use sdl2::rect::{Point, Rect};
-use sdl2::render::Canvas;
+use sdl2::render::{Canvas, TextureValueError};
+use sdl2::ttf::FontError;
 use sdl2::video::Window;
 
 pub const FIELD_WIDTH: u32 = 200;
@@ -72,7 +73,7 @@ fn work() -> Result<(), Error> {
             render_field(&mut canvas, scene.field(), scene.indexed_conditions());
 
             render_ants(&mut canvas, scene.ants());
-            render_information(&mut canvas, &font, scene.loop_count());
+            render_information(&mut canvas, &font, scene.loop_count()).map_err(Error::from)?;
             canvas.present();
         }
 
@@ -93,16 +94,46 @@ fn work() -> Result<(), Error> {
     Ok(())
 }
 
-fn render_information(canvas: &mut Canvas<Window>, font: &sdl2::ttf::Font, loop_count: u32) {
+enum RenderInformationError {
+    Font(FontError),
+    TextureValue(TextureValueError),
+    Copy(String),
+}
+
+impl From<RenderInformationError> for Error {
+    fn from(val: RenderInformationError) -> Self {
+        match val {
+            RenderInformationError::Font(e) => Error::Font(e),
+            RenderInformationError::TextureValue(e) => Error::TextureValue(e),
+            RenderInformationError::Copy(s) => {
+                Error::Rendering("render_information copy: ".to_owned() + s.as_str())
+            }
+        }
+    }
+}
+
+fn render_information(
+    canvas: &mut Canvas<Window>,
+    font: &sdl2::ttf::Font,
+    loop_count: u32,
+) -> Result<(), RenderInformationError> {
     let text = format!("{}", loop_count);
     let white = Color::RGB(255, 255, 255);
-    let surface = font.render(&text).solid(white).unwrap();
+    let surface = font
+        .render(&text)
+        .solid(white)
+        .map_err(RenderInformationError::Font)?;
     let texture_creator = canvas.texture_creator();
-    let texture = surface.as_texture(&texture_creator).unwrap();
+    let texture = surface
+        .as_texture(&texture_creator)
+        .map_err(RenderInformationError::TextureValue)?;
     let scale = 2;
 
     let rect = Rect::new(0, 0, surface.width() / scale, surface.height() / scale);
-    canvas.copy(&texture, None, rect).unwrap();
+
+    canvas
+        .copy(&texture, None, rect)
+        .map_err(RenderInformationError::Copy)
 }
 
 fn clear(canvas: &mut Canvas<Window>) {

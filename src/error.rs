@@ -1,4 +1,9 @@
-use sdl2::{ttf::InitError, video::WindowBuildError, IntegerOrSdlError};
+use sdl2::{
+    render::TextureValueError,
+    ttf::{FontError, InitError},
+    video::WindowBuildError,
+    IntegerOrSdlError,
+};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -23,4 +28,13 @@ pub(crate) enum Error {
 
     #[error("a sdl2 error: {0}")]
     SDL2String(String),
+
+    #[error("font error: {0}")]
+    Font(FontError),
+
+    #[error("texture value error: {0}")]
+    TextureValue(TextureValueError),
+
+    #[error("rendering error: {0}")]
+    Rendering(String),
 }
