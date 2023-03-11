@@ -43,16 +43,21 @@ pub struct Scene {
     loop_count: u32,
 }
 
+pub enum LibError {
+    NoAntsNumber(u8),
+    NoBehaviorNumber(u8),
+}
+
 // TODO: remove panic
-fn find_behavior(number: u8) -> Behavior {
+fn find_behavior(number: u8) -> Result<Behavior, LibError> {
     match number {
-        0 => Behavior {
+        0 => Ok(Behavior {
             indexed_conditions: vec![
                 State::new(Pattern::Right, Color::new(0, 0, 0)),
                 State::new(Pattern::Left, Color::new(255, 255, 255)),
             ],
-        },
-        1 => Behavior {
+        }),
+        1 => Ok(Behavior {
             indexed_conditions: vec![
                 State::new(Pattern::Left, Color::new(0, 0, 0)),
                 State::new(Pattern::Right, Color::new(255, 0, 0)),
@@ -64,8 +69,8 @@ fn find_behavior(number: u8) -> Behavior {
                 State::new(Pattern::Left, Color::new(255, 255, 255)),
                 State::new(Pattern::Right, Color::new(128, 128, 128)),
             ],
-        },
-        2 => Behavior {
+        }),
+        2 => Ok(Behavior {
             indexed_conditions: vec![
                 State::new(Pattern::Left, Color::new(0, 0, 0)),
                 State::new(Pattern::Left, Color::new(255, 0, 0)),
@@ -80,8 +85,8 @@ fn find_behavior(number: u8) -> Behavior {
                 State::new(Pattern::Left, Color::new(0, 128, 0)),
                 State::new(Pattern::Right, Color::new(0, 0, 128)),
             ],
-        },
-        3 => Behavior {
+        }),
+        3 => Ok(Behavior {
             indexed_conditions: vec![
                 State::new(Pattern::Right, Color::new(0, 0, 0)),
                 State::new(Pattern::Right, Color::new(255, 0, 0)),
@@ -96,24 +101,23 @@ fn find_behavior(number: u8) -> Behavior {
                 State::new(Pattern::Right, Color::new(0, 128, 0)),
                 State::new(Pattern::Right, Color::new(0, 0, 128)),
             ],
-        },
-        _default => panic!(),
+        }),
+        n => Err(LibError::NoBehaviorNumber(n)),
     }
 }
 
-// TODO: remove panic
-fn find_ants(number: u8, x: u32, y: u32) -> Vec<Ant> {
+fn find_ants(number: u8, x: u32, y: u32) -> Result<Vec<Ant>, LibError> {
     let x = x as i32;
     let y = y as i32;
     match number {
-        1 => vec![Ant {
+        1 => Ok(vec![Ant {
             position: Position {
                 y: YPositionValue(LoopValue::new(y / 2, y)),
                 x: XPositionValue(LoopValue::new(x / 2, y)),
             },
             direction: Direction::Down,
-        }],
-        2 => vec![
+        }]),
+        2 => Ok(vec![
             Ant {
                 position: Position {
                     y: YPositionValue(LoopValue::new(y / 2, y)),
@@ -128,8 +132,8 @@ fn find_ants(number: u8, x: u32, y: u32) -> Vec<Ant> {
                 },
                 direction: Direction::Down,
             },
-        ],
-        3 => vec![
+        ]),
+        3 => Ok(vec![
             Ant {
                 position: Position {
                     y: YPositionValue(LoopValue::new(y / 2, y)),
@@ -151,19 +155,19 @@ fn find_ants(number: u8, x: u32, y: u32) -> Vec<Ant> {
                 },
                 direction: Direction::Down,
             },
-        ],
-        _default => panic!(),
+        ]),
+        n => Err(LibError::NoAntsNumber(n)),
     }
 }
 
 impl Scene {
-    pub fn init(x: u32, y: u32, behavior_number: u8, ants_count: u8) -> Scene {
-        Scene {
-            behavior: find_behavior(behavior_number),
-            ants: find_ants(ants_count, x, y),
+    pub fn init(x: u32, y: u32, behavior_number: u8, ants_count: u8) -> Result<Scene, LibError> {
+        Ok(Scene {
+            behavior: find_behavior(behavior_number)?,
+            ants: find_ants(ants_count, x, y)?,
             field: vec![vec![0; x as usize]; y as usize],
             loop_count: 0,
-        }
+        })
     }
 
     pub fn work(&mut self) {

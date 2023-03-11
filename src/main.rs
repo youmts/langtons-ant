@@ -1,9 +1,6 @@
-mod error;
-
 use std::collections::HashMap;
 use std::process::ExitCode;
 
-use error::Error;
 use langtons_ant::*;
 
 use sdl2::event::Event;
@@ -11,8 +8,8 @@ use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
 use sdl2::rect::{Point, Rect};
 use sdl2::render::{Canvas, TextureValueError};
-use sdl2::ttf::FontError;
 use sdl2::video::Window;
+use sdl2::{ttf::FontError, ttf::InitError, video::WindowBuildError, IntegerOrSdlError};
 
 pub const FIELD_WIDTH: u32 = 200;
 pub const FIELD_HEIGHT: u32 = 200;
@@ -24,6 +21,47 @@ pub const SKIP_RENDER_FRAME: u32 = 10;
 pub const CANVAS_SCALE: u32 = 4;
 pub const ANTS_THICKNESS: u32 = 2;
 
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub(crate) enum Error {
+    #[error("sdl2 initialization error: {0}")]
+    SDL2Init(String),
+
+    #[error("sdl2 video initialization error: {0}")]
+    SDL2VideoInit(String),
+
+    #[error("sdl2 ttf initialization error: {0}")]
+    SDL2TTFInit(InitError),
+
+    #[error("load font error: {0}")]
+    LoadFont(String),
+
+    #[error("window build error: {0}")]
+    WindowBuild(WindowBuildError),
+
+    #[error("a sdl2 error(IntegerOrSdlError): {0}")]
+    IntegerOrSDL2(IntegerOrSdlError),
+
+    #[error("a sdl2 error(String): {0}")]
+    SDL2String(String),
+
+    #[error("font error: {0}")]
+    Font(FontError),
+
+    #[error("texture value error: {0}")]
+    TextureValue(TextureValueError),
+
+    #[error("rendering error: {0}")]
+    Rendering(String),
+
+    #[error("ants number: {0} is incorrect")]
+    NoAntsNumber(u8),
+
+    #[error("behavior number: {0} is incorrect")]
+    NoBehaviorNumber(u8),
+}
+
 pub fn main() -> ExitCode {
     match work() {
         Err(e) => {
@@ -31,6 +69,15 @@ pub fn main() -> ExitCode {
             ExitCode::FAILURE
         }
         Ok(_) => ExitCode::SUCCESS,
+    }
+}
+
+impl From<LibError> for Error {
+    fn from(value: LibError) -> Self {
+        match value {
+            LibError::NoAntsNumber(n) => Self::NoAntsNumber(n),
+            LibError::NoBehaviorNumber(n) => Self::NoBehaviorNumber(n),
+        }
     }
 }
 
@@ -63,7 +110,8 @@ fn work() -> Result<(), Error> {
     canvas.present();
     let mut event_pump = sdl_context.event_pump().map_err(Error::SDL2String)?;
 
-    let mut scene = Scene::init(FIELD_WIDTH, FIELD_HEIGHT, BEHAVIOR_NUMBER, ANTS_COUNT);
+    let mut scene =
+        Scene::init(FIELD_WIDTH, FIELD_HEIGHT, BEHAVIOR_NUMBER, ANTS_COUNT).map_err(Error::from)?;
 
     'running: loop {
         scene.work();
