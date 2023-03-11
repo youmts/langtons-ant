@@ -84,6 +84,7 @@ fn work() -> Result<(), Error> {
                     keycode: Some(Keycode::Escape),
                     ..
                 } => break 'running,
+
                 _ => {}
             }
         }

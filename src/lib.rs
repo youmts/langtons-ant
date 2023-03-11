@@ -43,6 +43,7 @@ pub struct Scene {
     loop_count: u32,
 }
 
+// TODO: remove panic
 fn find_behavior(number: u8) -> Behavior {
     match number {
         0 => Behavior {
@@ -100,6 +101,7 @@ fn find_behavior(number: u8) -> Behavior {
     }
 }
 
+// TODO: remove panic
 fn find_ants(number: u8, x: u32, y: u32) -> Vec<Ant> {
     let x = x as i32;
     let y = y as i32;
