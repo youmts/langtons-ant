@@ -23,10 +23,10 @@ pub(crate) enum Error {
     #[error("window build error: {0}")]
     WindowBuild(WindowBuildError),
 
-    #[error("a sdl2 error: {0}")]
+    #[error("a sdl2 error(IntegerOrSdlError): {0}")]
     IntegerOrSDL2(IntegerOrSdlError),
 
-    #[error("a sdl2 error: {0}")]
+    #[error("a sdl2 error(String): {0}")]
     SDL2String(String),
 
     #[error("font error: {0}")]
