@@ -243,15 +243,15 @@ impl ops::AddAssign<i32> for LoopValue {
     }
 }
 
-impl Into<i32> for LoopValue {
-    fn into(self) -> i32 {
-        self.value
+impl From<LoopValue> for i32 {
+    fn from(val: LoopValue) -> Self {
+        val.value
     }
 }
 
-impl Into<usize> for LoopValue {
-    fn into(self) -> usize {
-        self.value as usize
+impl From<LoopValue> for usize {
+    fn from(val: LoopValue) -> Self {
+        val.value as usize
     }
 }
 
@@ -293,9 +293,9 @@ impl ops::AddAssign<YVectorValue> for YPositionValue {
         self.0 += rhs.0;
     }
 }
-impl Into<i32> for YPositionValue {
-    fn into(self) -> i32 {
-        self.0.into()
+impl From<YPositionValue> for i32 {
+    fn from(val: YPositionValue) -> Self {
+        val.0.into()
     }
 }
 
@@ -311,9 +311,9 @@ impl ops::AddAssign<XVectorValue> for XPositionValue {
         self.0 += rhs.0;
     }
 }
-impl Into<i32> for XPositionValue {
-    fn into(self) -> i32 {
-        self.0.into()
+impl From<XPositionValue> for i32 {
+    fn from(val: XPositionValue) -> Self {
+        val.0.into()
     }
 }
 

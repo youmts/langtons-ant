@@ -29,8 +29,8 @@ pub fn main() {
     let window = video_subsystem
         .window(
             "rust-sdl2 demo",
-            FIELD_WIDTH as u32 * CANVAS_SCALE,
-            FIELD_HEIGHT as u32 * CANVAS_SCALE,
+            FIELD_WIDTH * CANVAS_SCALE,
+            FIELD_HEIGHT * CANVAS_SCALE,
         )
         .position_centered()
         .build()
@@ -40,7 +40,7 @@ pub fn main() {
 
     canvas.set_draw_color(Color::RGB(0, 0, 0));
     canvas
-        .set_logical_size(FIELD_WIDTH as u32, FIELD_HEIGHT as u32)
+        .set_logical_size(FIELD_WIDTH, FIELD_HEIGHT)
         .unwrap();
     canvas.clear();
     canvas.present();
@@ -92,13 +92,13 @@ fn clear(canvas: &mut Canvas<Window>) {
     canvas.clear();
 }
 
-fn render_field(canvas: &mut Canvas<Window>, field: &Field, indexed_states: &Vec<State>) {
+fn render_field(canvas: &mut Canvas<Window>, field: &Field, indexed_states: &[State]) {
     let mut map: HashMap<usize, Vec<Point>> = HashMap::new();
 
     for (y, row) in field.iter().enumerate() {
         for (x, cell) in row.iter().enumerate() {
             map.entry(*cell)
-                .or_insert_with(|| vec![])
+                .or_insert_with(std::vec::Vec::new)
                 .push(Point::new(x as i32, y as i32));
         }
     }
