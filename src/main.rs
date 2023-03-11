@@ -146,47 +146,23 @@ fn work() -> Result<(), Error> {
     Ok(())
 }
 
-enum RenderError {
-    Font(FontError),
-    TextureValue(TextureValueError),
-    Copy(String),
-    DrawPoints(String),
-    FillRect(String),
-}
-
-impl From<RenderError> for Error {
-    fn from(val: RenderError) -> Self {
-        match val {
-            RenderError::Font(e) => Error::Font(e),
-            RenderError::TextureValue(e) => Error::TextureValue(e),
-            RenderError::Copy(s) => Error::Rendering("render copy: ".to_owned() + s.as_str()),
-            RenderError::DrawPoints(s) => {
-                Error::Rendering("render draw_points: ".to_owned() + s.as_str())
-            }
-            RenderError::FillRect(s) => {
-                Error::Rendering("render fill_rect: ".to_owned() + s.as_str())
-            }
-        }
-    }
-}
-
 fn render_information(
     canvas: &mut Canvas<Window>,
     font: &sdl2::ttf::Font,
     loop_count: u32,
-) -> Result<(), RenderError> {
+) -> Result<(), Error> {
     let text = format!("{}", loop_count);
     let white = Color::RGB(255, 255, 255);
-    let surface = font.render(&text).solid(white).map_err(RenderError::Font)?;
+    let surface = font.render(&text).solid(white).map_err(Error::Font)?;
     let texture_creator = canvas.texture_creator();
     let texture = surface
         .as_texture(&texture_creator)
-        .map_err(RenderError::TextureValue)?;
+        .map_err(Error::TextureValue)?;
     let scale = 2;
 
     let rect = Rect::new(0, 0, surface.width() / scale, surface.height() / scale);
 
-    canvas.copy(&texture, None, rect).map_err(RenderError::Copy)
+    canvas.copy(&texture, None, rect).map_err(Error::Rendering)
 }
 
 fn clear(canvas: &mut Canvas<Window>) {
@@ -198,7 +174,7 @@ fn render_field(
     canvas: &mut Canvas<Window>,
     field: &Field,
     indexed_states: &[State],
-) -> Result<(), RenderError> {
+) -> Result<(), Error> {
     let mut map: HashMap<usize, Vec<Point>> = HashMap::new();
 
     for (y, row) in field.iter().enumerate() {
@@ -213,9 +189,7 @@ fn render_field(
         let state = &indexed_states[state_index];
         let color = convert_color(state.color());
         canvas.set_draw_color(color);
-        canvas
-            .draw_points(&points[..])
-            .map_err(RenderError::DrawPoints)?;
+        canvas.draw_points(&points[..]).map_err(Error::Rendering)?;
     }
 
     Ok(())
@@ -225,25 +199,11 @@ fn convert_color(color: &langtons_ant::Color) -> Color {
     Color::RGB(color.r, color.g, color.b)
 }
 
-enum RenderAntsError {
-    RenderAnt(RenderError),
-    NoColorNumber(u8),
-}
-
-impl From<RenderAntsError> for Error {
-    fn from(value: RenderAntsError) -> Self {
-        match value {
-            RenderAntsError::RenderAnt(e) => e.into(),
-            RenderAntsError::NoColorNumber(n) => Error::NoColorNumber(n),
-        }
-    }
-}
-
-fn render_ants(canvas: &mut Canvas<Window>, ants: &[Ant]) -> Result<(), RenderAntsError> {
+fn render_ants(canvas: &mut Canvas<Window>, ants: &[Ant]) -> Result<(), Error> {
     for (i, ant) in ants.iter().enumerate() {
         let (x, y) = ant.position();
-        let color = find_ants_color(i as u8).map_err(|e| RenderAntsError::NoColorNumber(e.0))?;
-        render_ant(canvas, x, y, color).map_err(RenderAntsError::RenderAnt)?;
+        let color = find_ants_color(i as u8).map_err(|e| Error::NoColorNumber(e.0))?;
+        render_ant(canvas, x, y, color)?;
     }
 
     Ok(())
@@ -266,12 +226,7 @@ fn find_ants_color(number: u8) -> Result<Color, NoColorNumber> {
     }
 }
 
-fn render_ant(
-    canvas: &mut Canvas<Window>,
-    x: i32,
-    y: i32,
-    color: Color,
-) -> Result<(), RenderError> {
+fn render_ant(canvas: &mut Canvas<Window>, x: i32, y: i32, color: Color) -> Result<(), Error> {
     let thickness: i32 = 1;
     let rect = Rect::new(
         x - thickness,
@@ -280,7 +235,7 @@ fn render_ant(
         thickness as u32 * 2,
     );
     canvas.set_draw_color(color);
-    canvas.fill_rect(rect).map_err(RenderError::FillRect)?;
+    canvas.fill_rect(rect).map_err(Error::Rendering)?;
 
     Ok(())
 }
