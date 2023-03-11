@@ -21,14 +21,14 @@ git clone https://github.com/youmts/langtons-ant.git
 ### Executing program
 
 ```bash
+cd langtons-ant
 cargo run
 ```
 
 ## Help
 
-Any advise for common problems or issues.
 ```
-command to run if program contains helper info
+cargo run -- --help
 ```
 
 ## Authors
@@ -38,7 +38,7 @@ youmts
 <!---
 Contributors names and contact info
 
-ex. Dominique Pizzie  
+ex. Dominique Pizzie
 ex. [@DomPizzie](https://twitter.com/dompizzie)
 --->
 

@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::process::ExitCode;
 
+use clap::Parser;
 use langtons_ant::*;
 
 use sdl2::event::Event;
@@ -11,17 +12,31 @@ use sdl2::render::{Canvas, TextureValueError};
 use sdl2::video::Window;
 use sdl2::{ttf::FontError, ttf::InitError, video::WindowBuildError, IntegerOrSdlError};
 
-pub const FIELD_WIDTH: u32 = 200;
-pub const FIELD_HEIGHT: u32 = 200;
-
-pub const BEHAVIOR_NUMBER: u8 = 0;
-pub const ANTS_COUNT: u8 = 1;
-
-pub const SKIP_RENDER_FRAME: u32 = 10;
-pub const CANVAS_SCALE: u32 = 4;
 pub const ANTS_THICKNESS: u32 = 2;
 
 use thiserror::Error;
+
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    #[arg(short, long, default_value_t = 0)]
+    behavior: u8,
+
+    #[arg(short, long, default_value_t = 1)]
+    ant_number: u8,
+
+    #[arg(long, default_value_t = 200)]
+    field_width: u32,
+
+    #[arg(long, default_value_t = 200)]
+    field_height: u32,
+
+    #[arg(long, default_value_t = 4)]
+    canvas_scale: u32,
+
+    #[arg(long, default_value_t = 10)]
+    skip_render_frame: u32,
+}
 
 #[derive(Error, Debug)]
 pub(crate) enum Error {
@@ -66,7 +81,9 @@ pub(crate) enum Error {
 }
 
 pub fn main() -> ExitCode {
-    match work() {
+    let args = Args::parse();
+
+    match work(args) {
         Err(e) => {
             println!("{}", e);
             ExitCode::FAILURE
@@ -84,7 +101,7 @@ impl From<LibError> for Error {
     }
 }
 
-fn work() -> Result<(), Error> {
+fn work(args: Args) -> Result<(), Error> {
     let sdl_context = sdl2::init().map_err(Error::SDL2Init)?;
     let video_subsystem = sdl_context.video().map_err(Error::SDL2VideoInit)?;
 
@@ -96,8 +113,8 @@ fn work() -> Result<(), Error> {
     let window = video_subsystem
         .window(
             "rust-sdl2 demo",
-            FIELD_WIDTH * CANVAS_SCALE,
-            FIELD_HEIGHT * CANVAS_SCALE,
+            args.field_width * args.canvas_scale,
+            args.field_height * args.canvas_scale,
         )
         .position_centered()
         .build()
@@ -107,19 +124,24 @@ fn work() -> Result<(), Error> {
 
     canvas.set_draw_color(Color::RGB(0, 0, 0));
     canvas
-        .set_logical_size(FIELD_WIDTH, FIELD_HEIGHT)
+        .set_logical_size(args.field_width, args.field_height)
         .map_err(Error::IntegerOrSDL2)?;
     canvas.clear();
     canvas.present();
     let mut event_pump = sdl_context.event_pump().map_err(Error::SDL2String)?;
 
-    let mut scene =
-        Scene::init(FIELD_WIDTH, FIELD_HEIGHT, BEHAVIOR_NUMBER, ANTS_COUNT).map_err(Error::from)?;
+    let mut scene = Scene::init(
+        args.field_width,
+        args.field_height,
+        args.behavior,
+        args.ant_number,
+    )
+    .map_err(Error::from)?;
 
     'running: loop {
         scene.work();
 
-        if scene.loop_count() % SKIP_RENDER_FRAME == 0 {
+        if scene.loop_count() % args.skip_render_frame == 0 {
             clear(&mut canvas);
             render_field(&mut canvas, scene.field(), scene.indexed_conditions())?;
 
