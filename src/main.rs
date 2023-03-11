@@ -1,5 +1,9 @@
-use std::collections::HashMap;
+mod error;
 
+use std::collections::HashMap;
+use std::process::ExitCode;
+
+use error::Error;
 use langtons_ant::*;
 
 use sdl2::event::Event;
@@ -19,9 +23,23 @@ pub const SKIP_RENDER_FRAME: u32 = 10;
 pub const CANVAS_SCALE: u32 = 4;
 pub const ANTS_THICKNESS: u32 = 2;
 
-pub fn main() {
-    let sdl_context = sdl2::init().unwrap();
-    let video_subsystem = sdl_context.video().unwrap();
+pub fn main() -> ExitCode {
+    match work() {
+        Err(e) => {
+            println!("{:?}", e);
+            ExitCode::FAILURE
+        }
+        Ok(_) => ExitCode::SUCCESS,
+    }
+}
+
+struct Sdl2Error {
+    message: String,
+}
+
+fn work() -> Result<(), Error> {
+    let sdl_context = sdl2::init().map_err(|s| Error::SDL2Error(s))?;
+    let video_subsystem = sdl_context.video().map_err(|s| Error::SDL2Error(s))?;
 
     let ttl_context = sdl2::ttf::init().unwrap();
     let font = ttl_context.load_font("OpenSans-Regular.ttf", 24).unwrap();
@@ -39,9 +57,7 @@ pub fn main() {
     let mut canvas = window.into_canvas().build().unwrap();
 
     canvas.set_draw_color(Color::RGB(0, 0, 0));
-    canvas
-        .set_logical_size(FIELD_WIDTH, FIELD_HEIGHT)
-        .unwrap();
+    canvas.set_logical_size(FIELD_WIDTH, FIELD_HEIGHT).unwrap();
     canvas.clear();
     canvas.present();
     let mut event_pump = sdl_context.event_pump().unwrap();
@@ -73,6 +89,8 @@ pub fn main() {
 
         // ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
+
+    Ok(())
 }
 
 fn render_information(canvas: &mut Canvas<Window>, font: &sdl2::ttf::Font, loop_count: u32) {
