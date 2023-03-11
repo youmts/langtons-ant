@@ -60,6 +60,9 @@ pub(crate) enum Error {
 
     #[error("behavior number: {0} is incorrect")]
     NoBehaviorNumber(u8),
+
+    #[error("color number: {0} is incorrect")]
+    NoColorNumber(u8),
 }
 
 pub fn main() -> ExitCode {
@@ -118,9 +121,9 @@ fn work() -> Result<(), Error> {
 
         if scene.loop_count() % SKIP_RENDER_FRAME == 0 {
             clear(&mut canvas);
-            render_field(&mut canvas, scene.field(), scene.indexed_conditions());
+            render_field(&mut canvas, scene.field(), scene.indexed_conditions())?;
 
-            render_ants(&mut canvas, scene.ants());
+            render_ants(&mut canvas, scene.ants()).map_err(Error::from)?;
             render_information(&mut canvas, &font, scene.loop_count()).map_err(Error::from)?;
             canvas.present();
         }
@@ -143,19 +146,25 @@ fn work() -> Result<(), Error> {
     Ok(())
 }
 
-enum RenderInformationError {
+enum RenderError {
     Font(FontError),
     TextureValue(TextureValueError),
     Copy(String),
+    DrawPoints(String),
+    FillRect(String),
 }
 
-impl From<RenderInformationError> for Error {
-    fn from(val: RenderInformationError) -> Self {
+impl From<RenderError> for Error {
+    fn from(val: RenderError) -> Self {
         match val {
-            RenderInformationError::Font(e) => Error::Font(e),
-            RenderInformationError::TextureValue(e) => Error::TextureValue(e),
-            RenderInformationError::Copy(s) => {
-                Error::Rendering("render_information copy: ".to_owned() + s.as_str())
+            RenderError::Font(e) => Error::Font(e),
+            RenderError::TextureValue(e) => Error::TextureValue(e),
+            RenderError::Copy(s) => Error::Rendering("render copy: ".to_owned() + s.as_str()),
+            RenderError::DrawPoints(s) => {
+                Error::Rendering("render draw_points: ".to_owned() + s.as_str())
+            }
+            RenderError::FillRect(s) => {
+                Error::Rendering("render fill_rect: ".to_owned() + s.as_str())
             }
         }
     }
@@ -165,24 +174,19 @@ fn render_information(
     canvas: &mut Canvas<Window>,
     font: &sdl2::ttf::Font,
     loop_count: u32,
-) -> Result<(), RenderInformationError> {
+) -> Result<(), RenderError> {
     let text = format!("{}", loop_count);
     let white = Color::RGB(255, 255, 255);
-    let surface = font
-        .render(&text)
-        .solid(white)
-        .map_err(RenderInformationError::Font)?;
+    let surface = font.render(&text).solid(white).map_err(RenderError::Font)?;
     let texture_creator = canvas.texture_creator();
     let texture = surface
         .as_texture(&texture_creator)
-        .map_err(RenderInformationError::TextureValue)?;
+        .map_err(RenderError::TextureValue)?;
     let scale = 2;
 
     let rect = Rect::new(0, 0, surface.width() / scale, surface.height() / scale);
 
-    canvas
-        .copy(&texture, None, rect)
-        .map_err(RenderInformationError::Copy)
+    canvas.copy(&texture, None, rect).map_err(RenderError::Copy)
 }
 
 fn clear(canvas: &mut Canvas<Window>) {
@@ -190,8 +194,11 @@ fn clear(canvas: &mut Canvas<Window>) {
     canvas.clear();
 }
 
-// TODO: remove unwrap
-fn render_field(canvas: &mut Canvas<Window>, field: &Field, indexed_states: &[State]) {
+fn render_field(
+    canvas: &mut Canvas<Window>,
+    field: &Field,
+    indexed_states: &[State],
+) -> Result<(), RenderError> {
     let mut map: HashMap<usize, Vec<Point>> = HashMap::new();
 
     for (y, row) in field.iter().enumerate() {
@@ -206,34 +213,65 @@ fn render_field(canvas: &mut Canvas<Window>, field: &Field, indexed_states: &[St
         let state = &indexed_states[state_index];
         let color = convert_color(state.color());
         canvas.set_draw_color(color);
-        canvas.draw_points(&points[..]).unwrap();
+        canvas
+            .draw_points(&points[..])
+            .map_err(RenderError::DrawPoints)?;
     }
+
+    Ok(())
 }
 
 fn convert_color(color: &langtons_ant::Color) -> Color {
     Color::RGB(color.r, color.g, color.b)
 }
 
-fn render_ants(canvas: &mut Canvas<Window>, ants: &[Ant]) {
+enum RenderAntsError {
+    RenderAnt(RenderError),
+    NoColorNumber(u8),
+}
+
+impl From<RenderAntsError> for Error {
+    fn from(value: RenderAntsError) -> Self {
+        match value {
+            RenderAntsError::RenderAnt(e) => e.into(),
+            RenderAntsError::NoColorNumber(n) => Error::NoColorNumber(n),
+        }
+    }
+}
+
+fn render_ants(canvas: &mut Canvas<Window>, ants: &[Ant]) -> Result<(), RenderAntsError> {
     for (i, ant) in ants.iter().enumerate() {
         let (x, y) = ant.position();
-        let color = find_ants_color(i as u8);
-        render_ant(canvas, x, y, color);
+        let color = find_ants_color(i as u8).map_err(|e| RenderAntsError::NoColorNumber(e.0))?;
+        render_ant(canvas, x, y, color).map_err(RenderAntsError::RenderAnt)?;
+    }
+
+    Ok(())
+}
+
+struct NoColorNumber(u8);
+
+impl From<NoColorNumber> for Error {
+    fn from(value: NoColorNumber) -> Self {
+        Error::NoColorNumber(value.0)
     }
 }
 
-// TODO: remove panic
-fn find_ants_color(number: u8) -> Color {
+fn find_ants_color(number: u8) -> Result<Color, NoColorNumber> {
     match number {
-        0 => Color::RGB(255, 0, 0),
-        1 => Color::RGB(0, 255, 0),
-        2 => Color::RGB(0, 0, 255),
-        _default => panic!(),
+        0 => Ok(Color::RGB(255, 0, 0)),
+        1 => Ok(Color::RGB(0, 255, 0)),
+        2 => Ok(Color::RGB(0, 0, 255)),
+        n => Err(NoColorNumber(n)),
     }
 }
 
-// TODO: remove unwrap
-fn render_ant(canvas: &mut Canvas<Window>, x: i32, y: i32, color: Color) {
+fn render_ant(
+    canvas: &mut Canvas<Window>,
+    x: i32,
+    y: i32,
+    color: Color,
+) -> Result<(), RenderError> {
     let thickness: i32 = 1;
     let rect = Rect::new(
         x - thickness,
@@ -242,5 +280,7 @@ fn render_ant(canvas: &mut Canvas<Window>, x: i32, y: i32, color: Color) {
         thickness as u32 * 2,
     );
     canvas.set_draw_color(color);
-    canvas.fill_rect(rect).unwrap();
+    canvas.fill_rect(rect).map_err(RenderError::FillRect)?;
+
+    Ok(())
 }
