@@ -19,22 +19,32 @@ use thiserror::Error;
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-    #[arg(short, long, default_value_t = 0)]
+    #[arg(
+        short,
+        long,
+        value_name = "unsigned int(0<=n,n<=3)",
+        default_value_t = 0
+    )]
     behavior: u8,
 
-    #[arg(short, long, default_value_t = 1)]
+    #[arg(
+        short,
+        long,
+        value_name = "unsigned int(1<=n,n<=3)",
+        default_value_t = 1
+    )]
     ant_number: u8,
 
-    #[arg(long, default_value_t = 200)]
+    #[arg(long, value_name = "unsigned int", default_value_t = 200)]
     field_width: u32,
 
-    #[arg(long, default_value_t = 200)]
+    #[arg(long, value_name = "unsigned int", default_value_t = 200)]
     field_height: u32,
 
-    #[arg(long, default_value_t = 4)]
+    #[arg(long, value_name = "unsigned int", default_value_t = 4)]
     canvas_scale: u32,
 
-    #[arg(long, default_value_t = 10)]
+    #[arg(long, value_name = "unsigned int", default_value_t = 10)]
     skip_render_frame: u32,
 }
 
