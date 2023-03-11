@@ -6,6 +6,8 @@ Langton's ant in rust
 
 Langton's ant in rust
 
+https://en.wikipedia.org/wiki/Langton%27s_ant
+
 ## Getting Started
 
 ### Dependencies
