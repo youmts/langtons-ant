@@ -26,23 +26,21 @@ pub const ANTS_THICKNESS: u32 = 2;
 pub fn main() -> ExitCode {
     match work() {
         Err(e) => {
-            println!("{:?}", e);
+            println!("{}", e);
             ExitCode::FAILURE
         }
         Ok(_) => ExitCode::SUCCESS,
     }
 }
 
-struct Sdl2Error {
-    message: String,
-}
-
 fn work() -> Result<(), Error> {
-    let sdl_context = sdl2::init().map_err(|s| Error::SDL2Error(s))?;
-    let video_subsystem = sdl_context.video().map_err(|s| Error::SDL2Error(s))?;
+    let sdl_context = sdl2::init().map_err(Error::SDL2Init)?;
+    let video_subsystem = sdl_context.video().map_err(Error::SDL2VideoInit)?;
 
-    let ttl_context = sdl2::ttf::init().unwrap();
-    let font = ttl_context.load_font("OpenSans-Regular.ttf", 24).unwrap();
+    let ttf_context = sdl2::ttf::init().map_err(Error::SDL2TTFInit)?;
+    let font = ttf_context
+        .load_font("OpenSans-Regular.ttf", 24)
+        .map_err(Error::LoadFont)?;
 
     let window = video_subsystem
         .window(
@@ -52,15 +50,17 @@ fn work() -> Result<(), Error> {
         )
         .position_centered()
         .build()
-        .unwrap();
+        .map_err(Error::WindowBuild)?;
 
-    let mut canvas = window.into_canvas().build().unwrap();
+    let mut canvas = window.into_canvas().build().map_err(Error::IntegerOrSDL2)?;
 
     canvas.set_draw_color(Color::RGB(0, 0, 0));
-    canvas.set_logical_size(FIELD_WIDTH, FIELD_HEIGHT).unwrap();
+    canvas
+        .set_logical_size(FIELD_WIDTH, FIELD_HEIGHT)
+        .map_err(Error::IntegerOrSDL2)?;
     canvas.clear();
     canvas.present();
-    let mut event_pump = sdl_context.event_pump().unwrap();
+    let mut event_pump = sdl_context.event_pump().map_err(Error::SDL2String)?;
 
     let mut scene = Scene::init(FIELD_WIDTH, FIELD_HEIGHT, BEHAVIOR_NUMBER, ANTS_COUNT);
 
