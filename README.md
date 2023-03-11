@@ -1,10 +1,8 @@
-# Project Title
-
-Langton's ant in rust
+# Langton's ant in rust
 
 ## Description
 
-Langton's ant in rust
+![](https://github.com/youmts/langtons-ant/blob/main/image.png)
 
 https://en.wikipedia.org/wiki/Langton%27s_ant
 
